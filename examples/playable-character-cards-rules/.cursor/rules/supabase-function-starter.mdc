@@ -1,0 +1,194 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Supabase Function Starter Template
+
+**FOR AI AGENTS**: Use this exact boilerplate for new Edge Functions. All patterns are production-tested and include critical environment-aware logic.
+
+## 📁 Create: `supabase/functions/[function-name]/index.ts`
+
+```typescript
+import { createClient } from 'npm:@supabase/supabase-js@2';
+// AI imports (uncomment if needed):
+// import { getChatCompletion } from '../_shared/ai_adapters/gemini_2_5_flash_adapter.ts';
+// import { GoogleGenAI } from 'npm:@google/genai@1.5.1';
+// import { Buffer } from 'node:buffer';
+
+Deno.serve(async (req) => {
+  // Standard CORS (never modify)
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+  };
+
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
+  try {
+    // Environment validation (production pattern)
+    const requiredVars = ['SUPABASE_URL', 'SUPABASE_ANON_KEY'];
+    for (const envVar of requiredVars) {
+      if (!Deno.env.get(envVar)) {
+        throw new Error(`Missing environment variable: ${envVar}`);
+      }
+    }
+
+    // === ADMIN AUTH SECTION (remove entire block for public functions) ===
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized - Bearer token required' }), { 
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    const adminSecret = authHeader.replace('Bearer ', '').trim();
+    if (adminSecret !== Deno.env.get('ADMIN_SECRET_KEY')) {
+      return new Response(JSON.stringify({ error: 'Invalid admin credentials' }), { 
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    // === END ADMIN AUTH ===
+
+    // Database clients (choose based on function needs)
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL')!, 
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!  // For writes/admin operations
+    );
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL')!, 
+      Deno.env.get('SUPABASE_ANON_KEY')!  // For reads (respects RLS)
+    );
+
+    // Request parsing (adjust for GET vs POST)
+    const requestData = await req.json(); // POST functions
+    // const url = new URL(req.url); const param = url.searchParams.get('id'); // GET functions
+    
+    // Input validation (always validate)
+    const { requiredField } = requestData;
+    if (!requiredField) {
+      return new Response(JSON.stringify({ error: 'Missing required field: requiredField' }), { 
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // === 🔴 CRITICAL: Environment-Aware URL Generation (MANDATORY for functions creating public URLs) ===
+    // This pattern prevents the exact production failure where hardcoded local URLs break in production.
+    // Use this when uploading files to storage and need to return their public URLs.
+    const isProduction = Deno.env.get('SUPABASE_URL')?.includes('yevyfxmmijukjohbdjwv');
+    const baseUrl = isProduction 
+      ? 'https://yevyfxmmijukjohbdjwv.supabase.co'
+      : 'http://127.0.0.1:54321';
+    // Example usage: const publicUrl = `${baseUrl}/storage/v1/object/public/my-bucket/${imagePath}`;
+    // === END CRITICAL URL GENERATION ===
+
+    // === IMAGEN 3 PATTERN (production-optimized, uncomment if generating images) ===
+    /*
+    const gcpApiKey = Deno.env.get('GCP_API_KEY');
+    if (!gcpApiKey) throw new Error("GCP_API_KEY is not set");
+    
+    const ai = new GoogleGenAI({ apiKey: gcpApiKey });
+    const response = await ai.models.generateImages({
+      model: 'imagen-3.0-generate-002',
+      prompt: `Character illustration: ${description}. Fantasy art style.`,
+      config: {
+        numberOfImages: 1,
+        aspectRatio: "1:1",
+        // 🔴 CRITICAL: Production file size optimization (prevents upload limit errors)
+        outputMimeType: "image/jpeg", // JPEG format for smaller file size
+        outputCompressionQuality: 60, // 60% compression for optimal size/quality
+        personGeneration: "ALLOW_ALL", // Allow generation of people of all ages
+        enhancePrompt: true, // Use prompt rewriting logic for better results
+      }
+    });
+    
+    // Safety filter handling
+    if (response.raiFilteredReason) {
+      throw new Error(`Image generation blocked: ${response.raiFilteredReason}`);
+    }
+    
+    // Image processing with size monitoring
+    const imageBytes = response.generatedImages[0].image.imageBytes;
+    const imageSizeMB = (imageBytes.length / 1024 / 1024).toFixed(2);
+    console.log(`Generated JPEG image: ${imageSizeMB} MB`);
+    
+    const imageBuffer = Buffer.from(imageBytes, "base64");
+    const imagePath = `public/${crypto.randomUUID()}.jpg`; // JPEG extension
+    
+    // Storage upload
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from('card-images')
+      .upload(imagePath, imageBuffer, {
+        contentType: 'image/jpeg', // JPEG content type
+        cacheControl: '3600'
+      });
+    
+    if (uploadError) throw uploadError;
+    
+    // Environment-aware public URL generation
+    const publicImageUrl = `${baseUrl}/storage/v1/object/public/card-images/${imagePath}`;
+    */
+    // === END IMAGEN 3 PATTERN ===
+
+    // ===== BUSINESS LOGIC (replace this section) =====
+    
+    // Database operation example
+    const { data, error } = await supabaseClient
+      .from('cards')
+      .select('*')
+      .eq('id', requiredField)
+      .single();
+    
+    // Production error handling (never modify this pattern)
+    if (error) {
+      if (error.code === 'PGRST116' || error.message.includes('JSON object requested, multiple (or no) rows returned')) {
+        return new Response(JSON.stringify({ error: 'Resource not found' }), { 
+          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      throw error; // Other errors become 500
+    }
+
+    // ===== END BUSINESS LOGIC =====
+
+    // Success response (standard format)
+    return new Response(JSON.stringify({ 
+      success: true, 
+      data: data // Replace with your actual response data
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    console.error(`[${req.url}] Function error:`, error);
+    return new Response(JSON.stringify({ 
+      error: error.message || 'Internal server error' 
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+});
+```
+
+## 🚨 **CRITICAL REMINDERS FOR AI AGENTS**
+
+### **Mandatory Environment-Aware Patterns**
+- **NEVER hardcode `127.0.0.1` URLs** in functions that create public URLs
+- **ALWAYS use the `isProduction` detection pattern** for URL generation
+- **TEST production deployments directly** - local success ≠ production success
+
+### **Imagen 3 Production Constraints**
+- **ALWAYS use JPEG format** (`outputFormat: "JPEG"`)
+- **ALWAYS use medium compression** (`compressionQuality: "medium"`)
+- **Monitor file sizes** with logging to prevent upload limit errors
+
+### **Deployment Anti-Patterns to Avoid**
+- ❌ Assuming local file size limits apply to production
+- ❌ Using complex external dependencies like `deno-image` 
+- ❌ Hardcoding environment-specific URLs
+- ❌ Skipping production verification after deployment
+
+**These patterns prevent the exact production failures encountered during development.**

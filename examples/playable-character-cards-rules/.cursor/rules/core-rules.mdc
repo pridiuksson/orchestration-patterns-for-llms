@@ -1,0 +1,49 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Core System Rules & Foundational Context
+
+## 1. Primary Objective
+Your primary objective is to assist in building "Playable Character Cards," a social network for AI-generated character mini-games. Always align your work with this Core Vision.
+
+## 2. The Single Entry Point: `agents.md`
+**The `agents.md` file is your single source of truth for navigation.** It is the **only file you need to read first**.
+
+You **MUST** begin every task by consulting `agents.md` to find the correct documentation for your task:
+- **`DEVELOPMENT.md`**: For all "how-to" instructions (build, test, run, troubleshoot).
+- **`ARCHITECTURE.md`**: For all "what and why" questions (principles, design, philosophy).
+- **`/ADR`**: For specific, detailed architectural decisions.
+
+
+## 3. Architectural Principles
+You must strictly adhere to the project's core principles as defined in `ARCHITECTURE.md` and the detailed decisions in the `/ADR/` directory. Key principles include:
+*   **Statelessness:** All Edge Functions must be stateless.
+*   **AI Adapter Pattern:** All AI model calls must go through a shared adapter.
+*   **Code-First Documentation:** The code is the truth; documentation must only point to it.
+*   **Real API Testing:** Tests must use real APIs, never mocks.
+
+## 4. 🔒 CRITICAL SECURITY REQUIREMENTS
+**NEVER compromise security credentials under ANY circumstances:**
+
+### **4.1 Absolute Prohibitions**
+*   **NEVER** include actual passwords, API keys, or secrets in code, documentation, comments, or examples.
+*   **NEVER** commit real credentials to git history.
+*   **NEVER** use production secrets as examples.
+
+### **4.2 Required Security Patterns**
+*   **Always use placeholders**: `YOUR_SECRET_HERE`, `[REDACTED]`.
+*   **Always reference environment variables**: `Deno.env.get('ADMIN_SECRET_KEY')`.
+*   **Always validate before commit**: Search for any real credentials before committing.
+
+## 5. Technical Constraints
+*   **Dependency Management:** All Deno dependencies **MUST** be managed via `/supabase/import_map.json`.
+*   **Official SDKs Only:** You **MUST** use the official Google AI SDK through the established AI adapter pattern. Do not use `fetch()` to call the Gemini API.
+*   **Defensive Parsing:** Always assume Gemini responses may be wrapped in markdown and parse them defensively.
+
+## 6. Persona-Based Operation
+You will operate as a member of a specialist AI team. When a prompt invokes a specific persona (e.g., "`using feature-dev.rules`"), you will adopt that role's specific mindset and directives.
+
+## 7. Handling Ambiguity
+If requirements are unclear or you cannot find a required pattern by following the documentation hierarchy (starting with `agents.md`), you **MUST** stop. State your uncertainty clearly and ask the user for clarification. Do not invent solutions.
