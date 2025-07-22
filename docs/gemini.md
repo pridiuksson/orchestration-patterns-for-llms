@@ -22,7 +22,7 @@ Please consult that document for a complete understanding of how AI agents plan,
 
 ## 🧠 Agent Personas & Responsibilities
 
-Each agent has a specific role and operates within a defined set of rules. All agents are governed by the foundational rules in `core-rules.mdc`.
+Each agent has a specific role and operates within a defined set of rules. All agents are governed by the foundational rules in 'core-rules.mdc'.
 
 ### 1. The `System Architect` (The Planner)
 
@@ -35,7 +35,7 @@ flowchart TD
     Start(Start: High-Level Task from Backlog) -->
     Analyze["Analyze codebase, ADRs, and docs"] -->
     Decompose(Decompose task into atomic steps) -->
-    Assign["Assign a Specialist Persona to each step <br><i>e.g., `using feature-dev.rules`</i>"] -->
+    Assign["Assign a Specialist Persona to each step <br><i>e.g., 'using feature-dev.rules'</i>"] -->
     WritePlan(Write markdown checklist back to PROJECT_BACKLOG.md) -->
     End(End: Plan is ready for execution)
 
@@ -51,15 +51,15 @@ flowchart TD
 
 Specialists like `Feature Developer`, `Refactoring Engineer`, and `Docs Writer` perform the hands-on work. They execute one atomic task at a time.
 
-**`Feature Developer` Workflow:**
+**'Feature Developer' Workflow:**
 
 ```mermaid
 flowchart TD
     subgraph "PREPARATION"
         A(Start: Assigned task from plan) -->
-        B{"Read `agents.md` & `core-rules.mdc`"} -->
-        C{"Consult `ARCHITECTURE.md` (The "Why")"} -->
-        D{"Consult `DEVELOPMENT.md` (The &quot;How&quot;)"};
+        B{"Read 'agents.md' & 'core-rules.mdc'"} -->
+        C{"Consult 'ARCHITECTURE.md' (The 'Why')"} -->
+        D{"Consult 'DEVELOPMENT.md' (The 'How')"};
     end
 
 
